@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import danielrocha.americanasapi.adapters.ProductsListAdapter;
@@ -21,6 +22,10 @@ import danielrocha.americanasapi.utils.OnItemClickListener;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import rx.Observable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         getAmericanasADSProducts();
     }
 
+    /* Sem RXJava
     private void getAmericanasADSProducts() {
 
         Call<ArrayList<ProductModel>> call;
@@ -72,6 +78,40 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }*/
+
+    private void getAmericanasADSProducts() {
+        try {
+            ADSProductsAPI adsProductsAPI = ServiceGenerator.createService(ADSProductsAPI.class);
+
+            Observable<ArrayList<ProductModel>> result = adsProductsAPI.getAmericanasADSProducts(getString(R.string.api), getResources().getBoolean(R.bool.home),
+                    getString(R.string.referer), getString(R.string.userId));
+
+            Subscription subscription = result
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            productModels -> updateList(productModels),
+                            Throwable::printStackTrace,
+                            () -> Log.i(TAGLOG, "Completou!")
+                    );
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void updateList(ArrayList<ProductModel> productModels) {
+        productsListAdapter = new ProductsListAdapter(productModels, new OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, ProductModel productModel) {
+                String url = getUrlFromModel(productModel);
+                if(url != null) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(browserIntent);
+                }
+            }
+        });
+        mainBinding.recyclerView.setAdapter(productsListAdapter);
     }
 
     private String getUrlFromModel(ProductModel productModel) {
