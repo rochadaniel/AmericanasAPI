@@ -21,12 +21,12 @@ import danielrocha.americanasapi.viewHolders.ProductsListViewHolder;
 public class ProductsListAdapter extends
         RecyclerView.Adapter<ProductsListViewHolder> {
 
-    List<ProductModel> mBooks;
+    List<ProductModel> mProducts;
     OnItemClickListener mListener;
 
-    public ProductsListAdapter(List<ProductModel> books,
+    public ProductsListAdapter(List<ProductModel> mProducts,
                                OnItemClickListener listener) {
-        mBooks = books;
+        this.mProducts = mProducts;
         mListener = listener;
     }
 
@@ -45,20 +45,20 @@ public class ProductsListAdapter extends
 
     @Override
     public void onBindViewHolder(ProductsListViewHolder holder, int pos) {
-        final ProductModel book = mBooks.get(pos);
-        holder.productsListItemBinding.setMymodel(book);
+        final ProductModel product = mProducts.get(pos);
+        holder.productsListItemBinding.setMymodel(product);
         holder.productsListItemBinding.executePendingBindings();
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mListener.onItemClick(view, book);
+                mListener.onItemClick(view, product);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return mBooks != null ? mBooks.size() : 0;
+        return mProducts != null ? mProducts.size() : 0;
     }
 
 }
