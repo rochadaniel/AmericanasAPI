@@ -6,7 +6,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data class="MainBinding">
-
+        <import type="android.view.View"/>
+        <variable
+            name="isLoading"
+            type="Boolean" />
     </data>
 
 <RelativeLayout android:id="@+id/activity_main"
@@ -14,12 +17,21 @@
     android:layout_height="match_parent"
     tools:context="danielrocha.americanasapi.MainActivity">
 
+    <ProgressBar
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/progressBar"
+        android:visibility="@{isLoading ? View.VISIBLE : View.GONE}"/>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="vertical"
-        app:layout_manager='@{"linear"}'/>
+        app:layout_manager='@{"linear"}'
+        android:visibility="@{isLoading ? View.GONE : View.VISIBLE}"/>
 
 </RelativeLayout>
 

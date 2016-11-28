@@ -9,6 +9,7 @@ import android.os.Bundle;
 
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -92,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void getAmericanasADSProducts() {
         try {
+            Log.i(TAGLOG, "AQUIIIII");
+            mainBinding.setIsLoading(true);
             ADSProductsAPI adsProductsAPI = ServiceGenerator.createService(ADSProductsAPI.class);
 
             Observable<ArrayList<ProductModel>> result = adsProductsAPI.getAmericanasADSProducts(getString(R.string.api), getResources().getBoolean(R.bool.home),
@@ -101,7 +104,14 @@ public class MainActivity extends AppCompatActivity {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                            productModels -> EventBus.getDefault().postSticky(productModels),
+                            productModels -> {
+                                if (productModels != null && productModels.size() > 0) {
+                                    EventBus.getDefault().postSticky(productModels);
+                                } else {
+                                    mainBinding.setIsLoading(false);
+                                    Toast.makeText(MainActivity.this, "Nenhum produto encontrado", Toast.LENGTH_SHORT).show();
+                                }
+                            },
                             Throwable::printStackTrace,
                             () -> Log.i(TAGLOG, "Completou!")
                     );
@@ -117,14 +127,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateList(ArrayList<ProductModel> productModels) {
-        productsListAdapter = new ProductsListAdapter(productModels, new OnItemClickListener() {
-            @Override
-            public void onItemClick(View view, ProductModel productModel) {
-                String url = getUrlFromModel(productModel);
-                if(url != null) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(browserIntent);
-                }
+        mainBinding.setIsLoading(false);
+        productsListAdapter = new ProductsListAdapter(productModels, (View view, ProductModel productModel) -> {
+            String url = getUrlFromModel(productModel);
+            if(url != null) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
             }
         });
         mainBinding.recyclerView.setAdapter(productsListAdapter);
@@ -137,10 +145,11 @@ public class MainActivity extends AppCompatActivity {
             String[] vetor = productModel.getUrl().split("redirect_url=");
             if (vetor.length == 2) {
                 result = vetor[1].replaceAll("%3A", ":").replaceAll("%2F", "/").replaceAll("%3F", "?");
+
+                if (!result.startsWith("http://") && !result.startsWith("https://"))
+                    result = "http://" + result;
             }
 
-            if (!result.startsWith("http://") && !result.startsWith("https://"))
-                result = "http://" + result;
         } catch (Exception e) {
             Log.e(TAGLOG, e.getLocalizedMessage());
         }
