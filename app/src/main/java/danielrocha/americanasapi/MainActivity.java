@@ -10,6 +10,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -38,8 +42,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
+        EventBus.getDefault().register(this);
         getAmericanasADSProducts();
+    }
+
+    @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     /* Sem RXJava
@@ -91,13 +101,19 @@ public class MainActivity extends AppCompatActivity {
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
-                            productModels -> updateList(productModels),
+                            productModels -> EventBus.getDefault().postSticky(productModels),
                             Throwable::printStackTrace,
                             () -> Log.i(TAGLOG, "Completou!")
                     );
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    //mantém o estado quando vira a tela
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onEvent(ArrayList<ProductModel> productModels) {
+        updateList(productModels);
     }
 
     private void updateList(ArrayList<ProductModel> productModels) {
