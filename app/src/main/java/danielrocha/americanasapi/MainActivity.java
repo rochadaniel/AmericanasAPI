@@ -6,17 +6,12 @@ import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import butterknife.Bind;
-import butterknife.ButterKnife;
 import danielrocha.americanasapi.adapters.ProductsListAdapter;
 import danielrocha.americanasapi.databinding.MainBinding;
 import danielrocha.americanasapi.models.ProductModel;
@@ -61,9 +56,10 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onItemClick(View view, ProductModel productModel) {
                             String url = getUrlFromModel(productModel);
-                            if (!url.startsWith("http://") && !url.startsWith("https://")) url = "http://" + url;
-                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                            startActivity(browserIntent);
+                            if(url != null) {
+                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                                startActivity(browserIntent);
+                            }
                         }
                     });
                     mainBinding.recyclerView.setAdapter(productsListAdapter);
@@ -81,9 +77,16 @@ public class MainActivity extends AppCompatActivity {
     private String getUrlFromModel(ProductModel productModel) {
         String result = null;
 
-        String[] vetor = productModel.getUrl().split("redirect_url=");
-        if(vetor.length == 2) {
-            result = vetor[1].replaceAll("%3A", ":").replaceAll("%2F", "/").replaceAll("%3F", "?");
+        try {
+            String[] vetor = productModel.getUrl().split("redirect_url=");
+            if (vetor.length == 2) {
+                result = vetor[1].replaceAll("%3A", ":").replaceAll("%2F", "/").replaceAll("%3F", "?");
+            }
+
+            if (!result.startsWith("http://") && !result.startsWith("https://"))
+                result = "http://" + result;
+        } catch (Exception e) {
+            Log.e(TAGLOG, e.getLocalizedMessage());
         }
 
         return result;

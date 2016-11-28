@@ -9,7 +9,7 @@ import android.support.v7.widget.RecyclerView;
  * Created by danielrocha on 28/11/16.
  */
 
-public class LayoutManagerBiding {
+public class LayoutManagerBinding {
     @BindingAdapter({"bind:layout_manager"})
     public static void setLayoutManager(
             RecyclerView recyclerView, String layout){
