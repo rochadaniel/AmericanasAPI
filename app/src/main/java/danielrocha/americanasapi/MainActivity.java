@@ -23,6 +23,7 @@ import danielrocha.americanasapi.databinding.MainBinding;
 import danielrocha.americanasapi.models.ProductModel;
 import danielrocha.americanasapi.services.ADSProductsAPI;
 import danielrocha.americanasapi.services.ServiceGenerator;
+import danielrocha.americanasapi.utils.ConnectivityHelper;
 import danielrocha.americanasapi.utils.OnItemClickListener;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        mainBinding.setPresenter(this);
         EventBus.getDefault().register(this);
         getAmericanasADSProducts();
     }
@@ -53,68 +55,37 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    /* Sem RXJava
-    private void getAmericanasADSProducts() {
-
-        Call<ArrayList<ProductModel>> call;
-
-        ADSProductsAPI adsProductsAPI = ServiceGenerator.createService(ADSProductsAPI.class);
-
-        call = adsProductsAPI.getAmericanasADSProducts(getString(R.string.api), getResources().getBoolean(R.bool.home),
-                getString(R.string.referer), getString(R.string.userId));
-
-        call.enqueue(new Callback<ArrayList<ProductModel>>() {
-            @Override
-            public void onResponse(Call<ArrayList<ProductModel>> call, Response<ArrayList<ProductModel>> response) {
-                if(!response.isSuccessful()) {
-                    Log.e(TAGLOG, "error");
-                } else {
-                    productsListAdapter = new ProductsListAdapter(response.body(), new OnItemClickListener() {
-                        @Override
-                        public void onItemClick(View view, ProductModel productModel) {
-                            String url = getUrlFromModel(productModel);
-                            if(url != null) {
-                                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                                startActivity(browserIntent);
-                            }
-                        }
-                    });
-                    mainBinding.recyclerView.setAdapter(productsListAdapter);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ArrayList<ProductModel>> call, Throwable t) {
-                Log.e(TAGLOG, "failure");
-            }
-        });
-
-    }*/
-
-    private void getAmericanasADSProducts() {
+    public void getAmericanasADSProducts() {
         try {
-            Log.i(TAGLOG, "AQUIIIII");
-            mainBinding.setIsLoading(true);
-            ADSProductsAPI adsProductsAPI = ServiceGenerator.createService(ADSProductsAPI.class);
 
-            Observable<ArrayList<ProductModel>> result = adsProductsAPI.getAmericanasADSProducts(getString(R.string.api), getResources().getBoolean(R.bool.home),
-                    getString(R.string.referer), getString(R.string.userId));
+            if(ConnectivityHelper.isConnected(MainActivity.this)) {
+                mainBinding.setIsLoading(true);
+                mainBinding.setIsConnected(true);
+                ADSProductsAPI adsProductsAPI = ServiceGenerator.createService(ADSProductsAPI.class);
 
-            Subscription subscription = result
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(
-                            productModels -> {
-                                if (productModels != null && productModels.size() > 0) {
-                                    EventBus.getDefault().postSticky(productModels);
-                                } else {
-                                    mainBinding.setIsLoading(false);
-                                    Toast.makeText(MainActivity.this, "Nenhum produto encontrado", Toast.LENGTH_SHORT).show();
-                                }
-                            },
-                            Throwable::printStackTrace,
-                            () -> Log.i(TAGLOG, "Completou!")
-                    );
+                Observable<ArrayList<ProductModel>> result = adsProductsAPI.getAmericanasADSProducts(getString(R.string.api), getResources().getBoolean(R.bool.home),
+                        getString(R.string.referer), getString(R.string.userId));
+
+                Subscription subscription = result
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                productModels -> {
+                                    if (productModels != null && productModels.size() > 0) {
+                                        EventBus.getDefault().postSticky(productModels);
+                                    } else {
+                                        mainBinding.setIsLoading(false);
+                                        Toast.makeText(MainActivity.this, "Nenhum produto encontrado", Toast.LENGTH_SHORT).show();
+                                    }
+                                },
+                                Throwable::printStackTrace,
+                                () -> Log.i(TAGLOG, "Completou!")
+                        );
+            } else {
+                mainBinding.setIsLoading(false);
+                mainBinding.setIsConnected(false);
+            }
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -156,4 +127,5 @@ public class MainActivity extends AppCompatActivity {
 
         return result;
     }
+
 }

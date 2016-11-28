@@ -4,4 +4,6 @@
     <string name="referer">http://www.americanas.com.br</string>
     <string name="userId">va_2016211175514_565.3035299936265</string>
     <string name="price_format">R$ %1$.2f</string>
+    <string name="try_again">Tentar Novamente</string>
+    <string name="without_network_connection">Sem conexão com a internet</string>
 </resources>
