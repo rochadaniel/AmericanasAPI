@@ -3,4 +3,5 @@
     <string name="api">b2wads</string>
     <string name="referer">http://www.americanas.com.br</string>
     <string name="userId">va_2016211175514_565.3035299936265</string>
+    <string name="price_format">R$ %1$.2f</string>
 </resources>
