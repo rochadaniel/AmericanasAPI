@@ -11,11 +11,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
-import java.io.IOException;
 import java.util.ArrayList;
 
 import danielrocha.americanasapi.adapters.ProductsListAdapter;
@@ -24,10 +19,6 @@ import danielrocha.americanasapi.models.ProductModel;
 import danielrocha.americanasapi.services.ADSProductsAPI;
 import danielrocha.americanasapi.services.ServiceGenerator;
 import danielrocha.americanasapi.utils.ConnectivityHelper;
-import danielrocha.americanasapi.utils.OnItemClickListener;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -45,19 +36,11 @@ public class MainActivity extends AppCompatActivity {
 
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mainBinding.setPresenter(this);
-        EventBus.getDefault().register(this);
         getAmericanasADSProducts();
-    }
-
-    @Override
-    protected void onDestroy() {
-        EventBus.getDefault().unregister(this);
-        super.onDestroy();
     }
 
     public void getAmericanasADSProducts() {
         try {
-
             if(ConnectivityHelper.isConnected(MainActivity.this)) {
                 mainBinding.setIsLoading(true);
                 mainBinding.setIsConnected(true);
@@ -72,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
                         .subscribe(
                                 productModels -> {
                                     if (productModels != null && productModels.size() > 0) {
-                                        EventBus.getDefault().postSticky(productModels);
+                                        updateList(productModels);
                                     } else {
                                         mainBinding.setIsLoading(false);
                                         Toast.makeText(MainActivity.this, "Nenhum produto encontrado", Toast.LENGTH_SHORT).show();
@@ -85,17 +68,11 @@ public class MainActivity extends AppCompatActivity {
                 mainBinding.setIsLoading(false);
                 mainBinding.setIsConnected(false);
             }
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    //mantém o estado quando vira a tela
-    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
-    public void onEvent(ArrayList<ProductModel> productModels) {
-        updateList(productModels);
-    }
 
     private void updateList(ArrayList<ProductModel> productModels) {
         mainBinding.setIsLoading(false);
